@@ -1,6 +1,7 @@
 #include "main.h"
 #include "rc.h"
 #include <commdlg.h>
+#include <filesystem>
 
 using namespace Gdiplus;
 
@@ -12,6 +13,10 @@ void main_window::on_paint(HDC hdc)
 	if (loaded_image)
 	{
 		Gdiplus::Graphics graphics(hdc);
+
+		Gdiplus::SolidBrush background_brush(Gdiplus::Color::White);
+		graphics.FillRectangle(&background_brush, 0, 0, client_rect.right - client_rect.left, client_rect.bottom - client_rect.top);
+
 		Gdiplus::RectF display_area(
 			static_cast<Gdiplus::REAL>(client_rect.left),
 			static_cast<Gdiplus::REAL>(client_rect.top),
@@ -30,12 +35,12 @@ void main_window::on_paint(HDC hdc)
 		format.SetAlignment(Gdiplus::StringAlignmentCenter);
 		format.SetLineAlignment(Gdiplus::StringAlignmentFar);
 
-		Gdiplus::SolidBrush shadow_brush(Gdiplus::Color(100, 0, 0, 0)); // poluprozirna sjena
+		Gdiplus::SolidBrush shadow_brush(Gdiplus::Color(255, 0, 0, 0)); // poluprozirna sjena
 		Gdiplus::SolidBrush text_brush(Gdiplus::Color::White);
 
 		Gdiplus::RectF shadow_area = display_area;
-		shadow_area.X += 2;
-		shadow_area.Y += 2;
+		shadow_area.X += 3;
+		shadow_area.Y += 3;
 
 		graphics.DrawString(file_name.c_str(), -1, &font, shadow_area, &format, &shadow_brush);
 		graphics.DrawString(file_name.c_str(), -1, &font, display_area, &format, &text_brush);
@@ -73,15 +78,15 @@ void main_window::on_command(int id)
 
 		if (GetOpenFileName(&open_dialog))
 		{
-			current_filename = file_path;
 			loaded_image = std::make_unique<Gdiplus::Image>(file_path);
 
 			if (loaded_image->GetLastStatus() == Gdiplus::Ok) {
-				InvalidateRect(*this, nullptr, TRUE);
+				file_name = std::filesystem::path(file_path).filename();
+				InvalidateRect(*this, nullptr, FALSE);
 			}
 			else {
 				loaded_image.reset();
-				current_filename.clear();
+				file_name.clear();
 				MessageBox(*this, _T("Failed to load the selected image file."), _T("Error"), MB_OK | MB_ICONERROR);
 			}
 		}

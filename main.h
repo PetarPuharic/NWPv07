@@ -24,8 +24,8 @@ protected:
 	void on_paint(HDC hdc) override;
 	void on_command(int id) override;
 	void on_destroy() override;
+	bool on_erase_bkgnd(HDC hdc) override { return true; }
 private:
 	std::wstring file_name;
-	std::wstring current_filename;
 	std::unique_ptr<Gdiplus::Image> loaded_image;
 };
