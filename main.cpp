@@ -10,13 +10,12 @@ void main_window::on_paint(HDC hdc)
 	RECT client_rect;
 	GetClientRect(*this, &client_rect);
 
-	if (loaded_image)
+	Gdiplus::Graphics graphics(hdc);
+	Gdiplus::SolidBrush background_brush(Gdiplus::Color::White);
+	graphics.FillRectangle(&background_brush, 0, 0, client_rect.right - client_rect.left, client_rect.bottom - client_rect.top);
+
+	if (loaded_image && !file_name.empty())
 	{
-		Gdiplus::Graphics graphics(hdc);
-
-		Gdiplus::SolidBrush background_brush(Gdiplus::Color::White);
-		graphics.FillRectangle(&background_brush, 0, 0, client_rect.right - client_rect.left, client_rect.bottom - client_rect.top);
-
 		Gdiplus::RectF display_area(
 			static_cast<Gdiplus::REAL>(client_rect.left),
 			static_cast<Gdiplus::REAL>(client_rect.top),
@@ -78,15 +77,17 @@ void main_window::on_command(int id)
 
 		if (GetOpenFileName(&open_dialog))
 		{
-			loaded_image = std::make_unique<Gdiplus::Image>(file_path);
+			auto temp_image = std::make_unique<Gdiplus::Image>(file_path);
 
-			if (loaded_image->GetLastStatus() == Gdiplus::Ok) {
+			if (temp_image->GetLastStatus() == Gdiplus::Ok) {
+				loaded_image = std::move(temp_image);
 				file_name = std::filesystem::path(file_path).filename();
 				InvalidateRect(*this, nullptr, FALSE);
 			}
 			else {
 				loaded_image.reset();
 				file_name.clear();
+				InvalidateRect(*this, nullptr, FALSE);
 				MessageBox(*this, _T("Failed to load the selected image file."), _T("Error"), MB_OK | MB_ICONERROR);
 			}
 		}
